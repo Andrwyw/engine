@@ -237,6 +237,11 @@ void Paragraph::SetText(std::vector<uint16_t> text, StyledRuns runs) {
 }
 
 bool Paragraph::ComputeLineBreaks() {
+
+#ifdef H3D_LOG_OPEN
+  FML_LOG(ERROR) << "[WYWWW]" << "Paragraph::ComputeLineBreaks";
+#endif
+    
   line_ranges_.clear();
   line_widths_.clear();
   max_intrinsic_width_ = 0;
@@ -253,6 +258,11 @@ bool Paragraph::ComputeLineBreaks() {
   size_t run_index = 0;
   for (size_t newline_index = 0; newline_index < newline_positions.size();
        ++newline_index) {
+
+#ifdef H3D_LOG_OPEN
+    FML_LOG(ERROR) << "[WYWWW]" << "Paragraph::ComputeLineBreaks for()... newline_index " << newline_index;
+#endif
+
     size_t block_start =
         (newline_index > 0) ? newline_positions[newline_index - 1] + 1 : 0;
     size_t block_end = newline_positions[newline_index];
@@ -275,6 +285,9 @@ bool Paragraph::ComputeLineBreaks() {
 
     // Add the runs that include this line to the LineBreaker.
     double block_total_width = 0;
+#ifdef H3D_LOG_OPEN
+      FML_LOG(ERROR) << "[WYWWW]" << "runs.size:" << runs_.size();
+#endif
     while (run_index < runs_.size()) {
       StyledRuns::Run run = runs_.GetRun(run_index);
       if (run.start >= block_end)
@@ -303,7 +316,10 @@ bool Paragraph::ComputeLineBreaks() {
       double run_width = breaker_.addStyleRun(&paint, collection, font,
                                               run_start, run_end, isRtl);
       block_total_width += run_width;
-
+#ifdef H3D_LOG_OPEN
+      FML_LOG(ERROR) << "[WYWWW]" << " run_width:" << run_width << " block_total_width:" << block_total_width;
+#endif
+        
       if (run.end > block_end)
         break;
       run_index++;
@@ -314,8 +330,15 @@ bool Paragraph::ComputeLineBreaks() {
     size_t breaks_count = breaker_.computeBreaks();
     const int* breaks = breaker_.getBreaks();
     for (size_t i = 0; i < breaks_count; ++i) {
+
+        
       size_t break_start = (i > 0) ? breaks[i - 1] : 0;
-      size_t line_start = break_start + block_start;
+#ifdef H3D_LOG_OPEN
+      FML_LOG(ERROR) << "[WYWWW]" << "Paragraph::ComputeLineBreaks breaks i:" << i << "  breakstart:" << break_start;
+#endif
+
+        
+        size_t line_start = break_start + block_start;
       size_t line_end = breaks[i] + block_start;
       bool hard_break = i == breaks_count - 1;
       size_t line_end_including_newline =
@@ -477,6 +500,11 @@ void Paragraph::ComputeStrut(StrutMetrics* strut, SkFont& font) {
 }
 
 void Paragraph::Layout(double width, bool force) {
+    
+#ifdef H3D_LOG_OPEN
+  FML_LOG(ERROR) << "[WYWWW]" << "Paragraph::Layout width" << width;
+#endif
+    
   // Do not allow calling layout multiple times without changing anything.
   if (!needs_layout_ && width == width_ && !force) {
     return;
@@ -919,6 +947,11 @@ void Paragraph::Layout(double width, bool force) {
             [](const CodeUnitRun& a, const CodeUnitRun& b) {
               return a.code_units.start < b.code_units.start;
             });
+
+
+#ifdef H3D_LOG_OPEN
+  FML_LOG(ERROR) << "[WYWWW]" << "Paragraph::Layout end...";
+#endif
 }
 
 double Paragraph::GetLineXOffset(double line_total_advance) {
@@ -1250,6 +1283,11 @@ std::vector<Paragraph::TextBox> Paragraph::GetRectsForRange(
   size_t max_line = 0;
   size_t min_line = INT_MAX;
   size_t glyph_length = 0;
+
+#ifdef H3D_LOG_OPEN
+  FML_LOG(ERROR) << "[WYWWW]" << "Paragraph::GetRectsForRange start:"<<start << " end: " << end;
+#endif
+
 
   // Generate initial boxes and calculate metrics.
   for (const CodeUnitRun& run : code_unit_runs_) {

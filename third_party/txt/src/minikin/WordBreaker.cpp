@@ -42,6 +42,10 @@ void WordBreaker::setLocale(const icu::Locale& locale) {
 }
 
 void WordBreaker::setText(const uint16_t* data, size_t size) {
+#ifdef H3D_LOG_OPEN
+  FML_LOG(ERROR) << "[WYWWW]" << "WordBreaker::setText ...";
+#endif
+
   mText = data;
   mTextSize = size;
   mIteratorWasReset = false;

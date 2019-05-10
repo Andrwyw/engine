@@ -32,7 +32,6 @@ int32_t tailoredGraphemeClusterBreak(uint32_t c) {
   if (c == 0x00AD                      // SHY
       || c == 0x061C                   // ALM
       || c == 0x180E                   // MONGOLIAN VOWEL SEPARATOR
-      || c == 0x200B                   // ZWSP
       || c == 0x200E                   // LRM
       || c == 0x200F                   // RLM
       || (0x202A <= c && c <= 0x202E)  // LRE, RLE, PDF, LRO, RLO
