@@ -71,6 +71,10 @@ void LineBreaker::setLocale(const icu::Locale& locale, Hyphenator* hyphenator) {
 }
 
 void LineBreaker::setText() {
+#ifdef H3D_LOG_OPEN
+  FML_LOG(ERROR) << "[WYWWW]" << "LineBreaker::setText ...";
+#endif
+
   mWordBreaker.setText(mTextBuf.data(), mTextBuf.size());
 
   // handle initial break here because addStyleRun may never be called
@@ -123,6 +127,12 @@ float LineBreaker::addStyleRun(MinikinPaint* paint,
                                size_t start,
                                size_t end,
                                bool isRtl) {
+    
+    
+#ifdef H3D_LOG_OPEN
+  FML_LOG(ERROR) << "[WYWWW]" << "LineBreaker::addStyleRun start-end:" << start << " " << end << " width size:" << mCharWidths.size();
+#endif
+    
   float width = 0.0f;
   int bidiFlags = isRtl ? kBidi_Force_RTL : kBidi_Force_LTR;
 
@@ -132,6 +142,11 @@ float LineBreaker::addStyleRun(MinikinPaint* paint,
                                 mTextBuf.size(), bidiFlags, style, *paint,
                                 typeface, mCharWidths.data() + start);
 
+#ifdef H3D_LOG_OPEN
+    FML_LOG(ERROR) << "[WYWWW]" << "LineBreaker::addStyleRun  Layout::measureText data "  << mTextBuf.data();
+#endif
+
+      
     // a heuristic that seems to perform well
     hyphenPenalty =
         0.5 * paint->size * paint->scaleX * mLineWidths.getLineWidth(0);
@@ -176,6 +191,11 @@ float LineBreaker::addStyleRun(MinikinPaint* paint,
         afterWord = i + 1;
       }
     }
+      
+#ifdef H3D_LOG_OPEN
+    FML_LOG(ERROR) << "[WYWWW]  LineBreaker::addStyleRun .loop... i :" << i << " current:" << current << " c:"<< c;
+#endif
+
     if (i + 1 == current) {
       size_t wordStart = mWordBreaker.wordStart();
       size_t wordEnd = mWordBreaker.wordEnd();
@@ -185,7 +205,7 @@ float LineBreaker::addStyleRun(MinikinPaint* paint,
           wordEnd - wordStart <= LONGEST_HYPHENATED_WORD) {
         mHyphenator->hyphenate(&mHyphBuf, &mTextBuf[wordStart],
                                wordEnd - wordStart, mLocale);
-#if VERBOSE_DEBUG
+//#if VERBOSE_DEBUG
         std::string hyphenatedString;
         for (size_t j = wordStart; j < wordEnd; j++) {
           if (mHyphBuf[j - wordStart] ==
@@ -195,8 +215,11 @@ float LineBreaker::addStyleRun(MinikinPaint* paint,
           // Note: only works with ASCII, should do UTF-8 conversion here
           hyphenatedString.push_back(buffer()[j]);
         }
-        ALOGD("hyphenated string: %s", hyphenatedString.c_str());
+#ifdef H3D_LOG_OPEN
+          FML_LOG(ERROR) << "[WYWWW]  hyphenated string" << hyphenatedString.c_str();
 #endif
+//        ALOGD("hyphenated string: %s", hyphenatedString.c_str());
+//#endif
 
         // measure hyphenated substrings
         for (size_t j = wordStart; j < wordEnd; j++) {
@@ -221,9 +244,9 @@ float LineBreaker::addStyleRun(MinikinPaint* paint,
           }
         }
       }
-
-      // Skip break for zero-width characters inside replacement span
-      if (paint != nullptr || current == end || mCharWidths[current] > 0) {
+        
+      // Skip break for zero-width characters inside replacement span // || mCharWidths[current] > 0
+      if (paint != nullptr || current == end ) {
         float penalty = hyphenPenalty * mWordBreaker.breakBadness();
         addWordBreak(current, mWidth, postBreak, mSpaceCount, postSpaceCount,
                      penalty, HyphenationType::DONT_BREAK);
@@ -246,7 +269,10 @@ void LineBreaker::addWordBreak(size_t offset,
                                size_t postSpaceCount,
                                float penalty,
                                HyphenationType hyph) {
-  Candidate cand;
+#ifdef H3D_LOG_OPEN
+   // FML_LOG(ERROR) << "[WYWWW]  addWordBreak" << offset;
+#endif
+    Candidate cand;
   ParaWidth width = mCandidates.back().preBreak;
   if (postBreak - width > currentLineWidth()) {
     // Add desperate breaks.
@@ -266,10 +292,14 @@ void LineBreaker::addWordBreak(size_t offset,
         cand.postSpaceCount = postSpaceCount;
         cand.penalty = SCORE_DESPERATE;
         cand.hyphenType = HyphenationType::BREAK_AND_DONT_INSERT_HYPHEN;
-#if VERBOSE_DEBUG
-        ALOGD("desperate cand: %zd %g:%g", mCandidates.size(), cand.postBreak,
-              cand.preBreak);
+// #if VERBOSE_DEBUG
+#ifdef H3D_LOG_OPEN
+          FML_LOG(ERROR) << "[WYWWW]  addWordBreak" << mCandidates.size() << cand.postBreak<< cand.preBreak ;
 #endif
+
+//          ALOGD("desperate cand: %zd %g:%g", mCandidates.size(), cand.postBreak,
+//              cand.preBreak);
+// #endif
         addCandidate(cand);
         width += w;
       }
@@ -388,7 +418,19 @@ float LineBreaker::currentLineWidth() const {
 void LineBreaker::computeBreaksGreedy() {
   // All breaks but the last have been added in addCandidate already.
   size_t nCand = mCandidates.size();
-  if (nCand > 0 && (nCand == 1 || mLastBreak != nCand - 1)) {
+#ifdef H3D_LOG_OPEN
+    FML_LOG(ERROR) << "[WYWWW]" << "candiSize:" << nCand;
+#endif
+
+#ifdef H3D_LOG_OPEN
+    for (size_t i = 0; i < nCand; i++) {
+        size_t of = mCandidates[i].offset;
+        FML_LOG(ERROR) << "[WYWWW]" << "computeBreaksGreedy cand @ i :" << i << " v:" << of; 
+    }
+#endif
+
+
+    if (nCand > 0 && (nCand == 1 || mLastBreak != nCand - 1)) {
     pushBreak(mCandidates[nCand - 1].offset,
               mCandidates[nCand - 1].postBreak - mPreBreak, mLastHyphenation);
     // don't need to update mBestScore, because we're done
@@ -513,6 +555,9 @@ void LineBreaker::computeBreaksOptimal(bool isRectangle) {
 }
 
 size_t LineBreaker::computeBreaks() {
+#ifdef H3D_LOG_OPEN
+    FML_LOG(ERROR) << "[WYWWW]" << "computeBreaks is greedy ? " << (mStrategy == kBreakStrategy_Greedy);
+#endif
   if (mStrategy == kBreakStrategy_Greedy) {
     computeBreaksGreedy();
   } else {

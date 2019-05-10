@@ -45,6 +45,8 @@ bool ShouldCreateLogMessage(LogSeverity severity);
 
 }  // namespace fml
 
+// #define H3D_LOG_OPEN 58
+
 #define FML_LOG_STREAM(severity) \
   ::fml::LogMessage(::fml::LOG_##severity, __FILE__, __LINE__, nullptr).stream()
 
